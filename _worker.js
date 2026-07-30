@@ -28,13 +28,10 @@ export default {
       redirect: 'follow'
     });
 
-    //if youread this youre a fucking nerd, and means that youre gay too
     try {
       let response = await fetch(proxyRequest);
-      
       const cleanResponseHeaders = new Headers(response.headers);
       cleanResponseHeaders.set("Access-Control-Allow-Origin", "*");
-      
       cleanResponseHeaders.delete("X-Frame-Options");
       cleanResponseHeaders.delete("Content-Security-Policy");
 
