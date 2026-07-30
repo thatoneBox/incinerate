@@ -1,20 +1,19 @@
 export default {
   async fetch(request, env, ctx) {
-    const TARGET_WORKER = "https://icy-morning-24cf.boxedtuffy.workers.dev/";
+    // 1. Force the target to download directly through your active routing proxy
+    const TARGET_GATEWAY = "https://icy-morning-24cf.boxedtuffy.workers.dev";
     const url = new URL(request.url);
-    const target = new URL(TARGET_WORKER);
+    const target = new URL(TARGET_GATEWAY);
 
+    // Swap parameters entirely so the browser doesn't execute localized domain queries
     url.hostname = target.hostname;
     url.protocol = target.protocol;
 
     const newHeaders = new Headers(request.headers);
     newHeaders.set("Host", target.hostname);
-    
-    if (newHeaders.has("origin")) {
-      newHeaders.set("origin", TARGET_WORKER);
-    }
-    newHeaders.set("referer", TARGET_WORKER);
+    newHeaders.set("Referer", TARGET_GATEWAY);
 
+    // Completely drop identifying router traces
     newHeaders.delete("cf-connecting-ip");
     newHeaders.delete("cf-ray");
     newHeaders.delete("cf-visitor");
@@ -29,9 +28,13 @@ export default {
     });
 
     try {
+      // 2. Download the movie hub layout elements directly onto the edge network
       let response = await fetch(proxyRequest);
+      
       const cleanResponseHeaders = new Headers(response.headers);
       cleanResponseHeaders.set("Access-Control-Allow-Origin", "*");
+      
+      // Prevent security layout drop exceptions
       cleanResponseHeaders.delete("X-Frame-Options");
       cleanResponseHeaders.delete("Content-Security-Policy");
 
@@ -41,7 +44,7 @@ export default {
         headers: cleanResponseHeaders
       });
     } catch (err) {
-      return new Response("Upstream worker pipeline fetch failed", { status: 502 });
+      return new Response("Edge server delivery network timeout", { status: 502 });
     }
   }
 };
